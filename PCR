@@ -1,0 +1,62 @@
+####
+#PCRデータ解析用
+#
+#
+
+tableName<-"yourFileNameHere"
+
+Dt<-read.table(tableName,header = T, sep = ",",row.names = 1)
+rowNum<-nrow(Dt)
+colNum<-ncol(Dt)
+
+Dt<-data.matrix(Dt)
+
+R<-matrix(0,colNum,colNum)
+
+for (i in 1:colNum){
+  for (j in 1:colNum){
+    R[i,j]<-cor(Dt[,i],Dt[,j],method="pearson")
+  }
+}
+
+eVec<-eigen(R)$vectors
+eVal<-eigen(R)$values
+
+smpNum<-rowNum
+cmpAxisNum<-colNum
+
+Z<-matrix(0,smpNum,cmpAxisNum)
+
+for (i in 1:smpNum){
+  for (j in 1:cmpAxisNum){
+    Z[i,j]<-Dt[i,]%*%(eVec[,j])
+  }
+}
+Z
+
+###
+#データプロットし、pngに出力
+#
+
+tmpTableName<-paste('pcr', tableName, sep='_')
+newTableName<-paste(tmpTableName, '.png', sep='')
+png(newTableName,　width = 1400, height = 500)
+
+par(oma = c(10,0,0,0))
+
+mat<-matrix(c(1,2,3),1,3,byrow=T)
+layout(mat)
+
+plot(Z[,1],Z[,2], sub=tableName)
+plot(Z[,1],Z[,3], sub=tableName)
+plot(Z[,2],Z[,3], sub=tableName)
+dev.off()
+
+###
+#解析データ書き出し
+#
+#write.table(data, exportDataName, quote=F, col.names=F, append = T)
+#(quote=Fにしないと要素に””がついてしまう)
+#append = Fにするとデータを上書きしてしまう。
+
+write.table(Z, tmpTableName, quote=F)
